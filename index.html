@@ -17,7 +17,7 @@
 		</div>
 		<div class="row">
 			<label>Choose difficulty : </label>
-			<select>
+			<select id="difficulty">
 				<option>Easy</option>
 				<option>Medium</option>
 				<option>Hard</option>
@@ -25,18 +25,22 @@
 		</div>
 		<div class="row">
 			<label>Choose player Avatar</label>
-			<select>
+			<select id="character">
 				<option>boy</option>
-				<option>cat girl</option>
-				<option>horn girl</option>
-				<option>pink girl</option>
-				<option>princess girl</option>		
+				<option>cat-girl</option>
+				<option>horn-girl</option>
+				<option>pink-girl</option>
+				<option>princess-girl</option>		
 			</select>
 		</div>
 		<div class="row char-preview" style="border:1px solid black;width:150px; height:100%;margin:auto;background-color:white">
 			<img src="images/char-boy.png" alt="character preview">
 		</div>
 	</section>
+	<div>
+		<h2 style="margin:0;padding:0;">Score : <span id='score'></span></h2>
+		<h2 id = 'message' style="margin:0;padding:0;"></h2>
+	</div>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     <script src="js/resources.js"></script>
     <script src="js/app.js"></script>

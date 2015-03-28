@@ -1,34 +1,20 @@
+
+// Global variables
+var playerPos = {};
+var score = 0;
+var message = '';
+var playerImage = 'images/char-boy.png';
+var difficulty = {'Easy':9, 'Medium': 18, 'Hard': 24}; //determines the number of enemies
+
+
 //Characters Class, with sprite value, position, update, render methods
-
-// canvas.width = 505;
-// canvas.height = 606;
-// Each row : 101px
-// Each column : 101px
 var Character = function(spriteImg, x, y) {
-    // Variables applied to each of our instances go here,
-    // we've provided one for you to get started
 
-    // The image/sprite for our enemies, this uses
-    // a helper we've provided to easily load images
+    // The image/sprite for our characters
     this.sprite = spriteImg;
-    //this.loc = "Startpos";
+    // Starting position
     this.x = x;
     this.y = y;
-};
-
-
-// Update the character's position, required method for game
-// Parameter: dt, a time delta between ticks
-Character.prototype.update = function(dt) {
-    // You should multiply any movement by the dt parameter
-    // which will ensure the game runs at the same speed for
-    // all computers.
-
-//Enemies' x value must change, y stays the same; render at 60FPS with consideration to dt 
-    setInterval(function() {
-        this.x += x;
-        this.y += y;
-    }, 1000/60*dt);
 };
 
 // Draw the character on the screen, required method for game
@@ -36,74 +22,134 @@ Character.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 
-// Enemies our player must avoid
 
-
-var Enemy = function(enemyImage, x, y) {
+// Enemy class
+var Enemy = function(enemyImage, x, y, speed) {
     Character.call(this, enemyImage, x, y);
-
+    // Speed of the enemy
+    this.speed = speed;
 };
 
 Enemy.prototype = Object.create(Character.prototype);
 
-Enemy.movementLoop = function(startPos) {
-    if (startPos === 'left') {
-        this.x += 1;
+
+// Update the enemy's position, required method for game
+// Parameter: dt, a time delta between ticks
+Enemy.prototype.update = function(dt) {
+    // You should multiply any movement by the dt parameter
+    // which will ensure the game runs at the same speed for
+    // all computers.
+
+    // Handle collisions with the player
+    if( Math.abs(playerPos.x-this.x)<=40 && Math.abs(playerPos.y-this.y)<=40){
+        score -= 20;
+        message = 'You got hit!';
+        // Reinitialise the player
+        player.y = 300;
+        player.x = 200;
     }
-    if (startPos === 'right') {
-        this.y -= 1;
+
+    // Reinitialise the movement of the enemy if it's out of the canvas
+    if (this.x >= 500) {
+        this.x = -200-Math.ceil(Math.random()*1000);
+    }
+    // Move the enemy in the x axis
+    else {
+        this.x += this.speed*dt;
     }
 };
 
-//Player has additional handleInput method
+/*
+The Enemy function, which initiates the Enemy by:
+Loading the image by setting this.sprite to the appropriate image in the image folder (already provided)
+Setting the Enemy initial location (you need to implement)
+Setting the Enemy speed (you need to implement)
+The update method for the Enemy
+Updates the Enemy location (you need to implement)
+Handles collision with the Player (you need to implement)
+You can add your own Enemy methods as needed
+*/
+
+
+// Player class
 var Player = function(playerImage){
-    Character.call(this, playerImage, 202, 400);
+    Character.call(this, playerImage, 202, 300);
 };
 
 Player.prototype = Object.create(Character.prototype);
 
+// Update the character's position, required method for game
+// Parameter: dt, a time delta between ticks
+Player.prototype.update = function(dt) {
 
-Player.prototype.handleInput = function(key, step) {
+    //Allow for realtime change of the player image
+    playerPos.x = this.x;
+    playerPos.y = this.y;
+
+    // Update the score on the page
+    $('#score').text(score.toString());
+
+    // Update the message on the page
+    $('#message').text(message);
+};
+
+//Handle input
+Player.prototype.handleInput = function(key) {
+    // Basic movement restricted inside the canvas
     switch(key) {
         case "up":
-            this.y -= step;
+            this.y -= 30;
             break;
         case "down":
-            if (this.y <= 420) {
-                this.y += step;
+            if (this.y <= 370) {
+                this.y += 30;
                 break;
             }  
             break;
         case "left":
-            this.x -= step;
+            if (this.x >= 0) {
+                this.x -= 30;
+                break;
+            }  
             break;
         case "right":
-            this.x += step;
+            if (this.x <= 400) {
+                this.x += 30;
+                break;
+            }  
             break;
         default:
             console.log("Input error");
     }
-    if (this.y === -20) {
-        alert("Well done! You won!");
-        this.y = 400;
+    // Player wins if he reaches the water, located at -20
+    if (this.y <= -20) {
+        this.y = 300;
+        this.x = 200;
+        score += 100;
+        message = "Well done! You got trough!";
+        ctx.fillText(score, 100, 100);
     }
 };
-
-
 
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies
 // Difficulty level affects enemy Speed and Qty of Enemies
-var allEnemies = [];
-var totalEnemies = 5;
-var playerStep = 10;
 
-for (var i = 0; i < totalEnemies; i++) {
-    allEnemies.push(new Enemy("images/enemy-bug.png", -50, 101));
-}
+var createEnemies = function(number) {
+    allEnemies = [];
+    for (var i = 0; i < number ; i++) {
+        var x = -200 - Math.ceil((Math.random()*1000));
+        allEnemies.push(new Enemy("images/enemy-bug.png", x, 50+i%3*85, Math.ceil(Math.random()*200)));
+        }
+    return allEnemies;
+    };
+
+// Default difficulty is easy
+var allEnemies = createEnemies(difficulty['Easy']);
 
 //Allow for selection of player avatar
-var player = new Player('images/char-boy.png');
+var player = new Player(playerImage);
+
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
@@ -115,7 +161,21 @@ document.addEventListener('keyup', function(e) {
         40: 'down'
     };
 
-    player.handleInput(allowedKeys[e.keyCode], playerStep);
+    player.handleInput(allowedKeys[e.keyCode]);
 });
 
-//Add store counter, timer
+
+// Change character sprite
+$('#character').change(function (){
+    var imageURL = 'images/char-'+$('#character option:selected').text()+'.png';
+    // Change Image in UI
+    $('.char-preview img').attr('src', imageURL);
+    // Change player sprite
+    player.sprite = imageURL;
+});
+
+// Change difficulty;
+$('#difficulty').change(function () {
+    allEnemies = createEnemies(difficulty[$('#difficulty option:selected').text()]);
+});
+
