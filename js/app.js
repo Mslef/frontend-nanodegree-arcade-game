@@ -1,10 +1,16 @@
 
 // Global variables
-var playerPos = {'x': 202, 'y': 300}, // Keeps the current player position
-    score = 0, //player score
+var score = 0, //player score
     message = '', // Message diplayed with the score
     difficulty = {'Easy':9, 'Medium': 18, 'Hard': 24}; //determines the number of enemies
 
+// Display score and message
+var displayValues = function() {
+    $('#score').html(score.toString());
+    $('#message').html(message);
+};
+
+displayValues();
 
 //Characters Class, with sprite value, position, update, render methods
 var Character = function(spriteImg, x, y) {
@@ -41,17 +47,14 @@ Enemy.prototype.update = function(dt) {
     // all computers.
 
     // Handle collisions with the player
-    if( Math.abs(playerPos.x-this.x)<=40 && Math.abs(playerPos.y-this.y)<=40){
+    if( Math.abs(player.x-this.x)<=40 && Math.abs(player.y-this.y)<=40){
         // Reduce player score and display message
         score -= 20;
         message = 'You got hit!';
+        displayValues();
         // Reinitialise the player position
         player.x = 200;
         player.y = 300;
-        
-        // Reinitialise playerPos
-        playerPos.x = 200;
-        playerPos.y = 300;
     }
 
     // Reinitialise the movement of the enemy if it's out of the canvas
@@ -77,11 +80,6 @@ Player.prototype = Object.create(Character.prototype);
 // Parameter: dt, a time delta between ticks
 Player.prototype.update = function(dt) {
 
-    // Update the score on the page
-    $('#score').text(score.toString());
-
-    // Update the message on the page
-    $('#message').text(message);
 };
 
 //Handle input
@@ -118,12 +116,8 @@ Player.prototype.handleInput = function(key) {
         this.x = 200;
         score += 100;
         message = "Well done! You got through!";
-        ctx.fillText(score, 100, 100);
+        displayValues();
     }
-
-    // Update playerPos to allow enemies to detect collisions
-    playerPos.x = this.x;
-    playerPos.y = this.y;
 };
 
 // Now instantiate your objects.
@@ -134,11 +128,15 @@ Player.prototype.handleInput = function(key) {
 var createEnemies = function(number) {
     allEnemies = [];
     for (var i = 0; i < number ; i++) {
-        var x = -200 - Math.ceil((Math.random()*1000));
-        allEnemies.push(new Enemy("images/enemy-bug.png", x, 50+i%3*85, Math.ceil(Math.random()*200)));
-        }
+        // Determine random starting speed and x positions for enemies
+        var randomStartPos = -200 - Math.ceil((Math.random()*1000));
+        var randomStartSpeed = Math.ceil(Math.random()*200);
+        // Spread enemies evenly in y
+        var yDistribution = 50+i%3*85;
+        allEnemies.push(new Enemy("images/enemy-bug.png", randomStartPos, yDistribution,randomStartSpeed ));
+    }
     return allEnemies;
-    };
+};
 
 // Create all enemies, default difficulty is easy
 var allEnemies = createEnemies(difficulty['Easy']);
@@ -163,6 +161,11 @@ document.addEventListener('keyup', function(e) {
 
 // Game settings
 
+// Change focus to the canvas to allow player movement after dropdown selection
+$("select").change(function(){
+    $(this).blur();
+});
+
 // Change character sprite
 $('#character').change(function (){
     var imageURL = 'images/char-'+$('#character option:selected').text()+'.png';
@@ -170,10 +173,16 @@ $('#character').change(function (){
     $('.char-preview img').attr('src', imageURL);
     // Change player sprite
     player.sprite = imageURL;
+    
 });
 
 // Change difficulty;
 $('#difficulty').change(function () {
     allEnemies = createEnemies(difficulty[$('#difficulty option:selected').text()]);
+    $('canvas').focus();
 });
+
+
+
+
 
